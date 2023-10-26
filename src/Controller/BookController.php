@@ -1,77 +1,81 @@
 <?php
 
 namespace App\Controller;
+
 use App\Entity\Book;
-use App\Entity\Author;
-use Doctrine\Persistence\ManagerRegistry;
+use App\Form\BookType;
 use App\Repository\BookRepository;
-use App\Repository\AuthorRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+#[Route('/book')]
 class BookController extends AbstractController
 {
-    #[Route('/book', name: 'app_book')]
-    public function index(): Response
+    #[Route('/', name: 'app_book_index', methods: ['GET'])]
+    public function index(BookRepository $bookRepository): Response
     {
         return $this->render('book/index.html.twig', [
-            'controller_name' => 'BookController',
+            'books' => $bookRepository->findAll(),
         ]);
     }
 
-    #[Route('/addbook', name: 'addbook')]
-    public function addstudent(ManagerRegistry $mr,AuthorRepository $repo): Response
+    #[Route('/new', name: 'app_book_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
-        $b = new Book();
-        $author =$repo->find(1);
-        $b->setTitle("i hate isrile ") ; 
-        $b->setPublicationDate("14/10/2023") ; 
-        $b->setIdAuthor($author) ; 
-        $em = $mr->getManager();
-        $em->persist($b);
-        $em->flush();
-        return new Response('added');
-    }
+        $book = new Book();
+        $form = $this->createForm(BookType::class, $book);
+        $form->handleRequest($request);
 
-    #[Route('/deletebook/{id}', name: 'deletebook')]
-    public function removeAuthor(ManagerRegistry $mr,$id,BookRepository $repo){
-        $b=$repo->find($id);
-        $em=$mr->getManager();
-        if($b!=null){
-        $em->remove($b);
-        $em->flush();
-    }else{
-        return new Response('id nexsite pas');
-    }
-        return new Response('deleted done .'); 
-    }
-    
-    #[Route('/bookshow', name: 'bookshow')]
-    public function fetchtwoBooks(BookRepository $repo){
-        $result=$repo->findAll();
-        
-        return $this->render('book/books.html.twig',[
-            'liste'=>$result
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($book);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_book_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->renderForm('book/new.html.twig', [
+            'book' => $book,
+            'form' => $form,
         ]);
-            }
+    }
 
-            #[Route('/deleteBook/{id}', name: 'app_delete')]
-            public function delete($id, BookRepository $repository)
-            {
-                $book = $repository->find($id);
-        
-                if (!$book) {
-                    throw $this->createNotFoundException('Book non trouvé');
-                }
-        
-                $em = $this->getDoctrine()->getManager();
-                $em->remove($book);
-                $em->flush();
-        
-                return $this->redirectToRoute('bookshow');
-            }
+    #[Route('/{id}', name: 'app_book_show', methods: ['GET'])]
+    public function show(Book $book): Response
+    {
+        return $this->render('book/show.html.twig', [
+            'book' => $book,
+        ]);
+    }
+
+    #[Route('/{id}/edit', name: 'app_book_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Book $book, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(BookType::class, $book);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_book_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->renderForm('book/edit.html.twig', [
+            'book' => $book,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}', name: 'app_book_delete', methods: ['POST'])]
+    public function delete(Request $request, Book $book, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$book->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($book);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('app_book_index', [], Response::HTTP_SEE_OTHER);
+    }
 }
-
-
-
