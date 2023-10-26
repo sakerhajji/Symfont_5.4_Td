@@ -1,0 +1,40 @@
+{% if liste is empty %}
+your table is empty
+{% else %}
+{% set nb_book = 0 %}
+<table border = "2">
+<tr>
+<th>id</th>
+<th>picture</th>
+<th>username</th>
+<th>email</th>
+<th>nb_books</th>
+<th>details</th>
+</tr>
+
+    
+
+{% for i in liste %}
+{% set nb_book = nb_book + i.nb_books %}
+<tr>
+<td>{{i.id}}</td>
+<td><img src="{{asset(i.picture)}}" alt="not found"  width="50px"higth="50px"></td>
+<td>{{i.username | upper }}</td>
+<td>{{i.email}}</td>
+<td>{{i.nb_books}}</td>
+<td> <a href="{{path('details',{'id': i.id})}}">detail</a> </td>
+
+
+</tr>
+  
+ 
+{% endfor %}
+
+
+</table>
+{% endif %}
+<hr>
+<p>le nombre des authors : </p>
+{{liste | length }}
+<p>le nombre toutle de livres : </p>
+{{nb_book }}

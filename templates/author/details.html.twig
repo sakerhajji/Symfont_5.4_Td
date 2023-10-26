@@ -1,0 +1,18 @@
+<table border = "2">
+    <tr>
+        <th>id</th>
+        <th>picture</th>
+        <th>username</th>
+        <th>email</th>
+        <th>nb_books</th>
+    </tr>
+
+    <tr>
+        <td>{{author.id}}</td>
+        <td><img src="{{asset(author.picture)}}" alt="not found"  width="50px"higth="50px"></td>
+        <td>{{author.username | upper }}</td>
+        <td>{{author.email}}</td>
+        <td>{{author.nb_books}}</td>
+        </tr>
+  
+ </table>
